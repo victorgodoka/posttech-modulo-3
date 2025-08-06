@@ -2,14 +2,16 @@
 import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import './global.css';
+import { createUser } from './firebase/auth';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !email || !password || !confirmPassword) {
@@ -21,11 +23,24 @@ export default function Register() {
       alert('As senhas não coincidem');
       return;
     }
+
+    if (password.length < 6) {
+      alert('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
     
-    // Aqui você adicionaria a lógica de registro
-    console.log('Register:', { name, email, password });
-    alert('Conta criada com sucesso!');
-    router.push('/login');
+    setLoading(true);
+    
+    try {
+      await createUser(email, password);
+      alert('Conta criada com sucesso!');
+      router.push('/home');
+    } catch (error: any) {
+      console.error('Erro ao criar conta:', error);
+      alert(`Erro ao criar conta: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,9 +97,10 @@ export default function Register() {
         
         <button
           type="submit"
-          className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-4 px-6 rounded-full transition-colors mt-6"
+          disabled={loading}
+          className={`w-full ${loading ? 'bg-teal-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'} text-white font-medium py-4 px-6 rounded-full transition-colors mt-6`}
         >
-          Sign up
+          {loading ? 'Creating account...' : 'Sign up'}
         </button>
       </form>
       

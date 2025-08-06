@@ -2,12 +2,14 @@
 import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import './global.css';
+import { signInUser } from './firebase/auth';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -15,10 +17,18 @@ export default function Login() {
       return;
     }
 
-    // Aqui você adicionaria a lógica de autenticação
-    console.log('Login:', { email, password });
-    alert('Login realizado com sucesso!');
-    router.push('/home');
+    setLoading(true);
+
+    try {
+      await signInUser(email, password);
+      alert('Login realizado com sucesso!');
+      router.push('/home');
+    } catch (error: any) {
+      console.error('Erro ao fazer login:', error);
+      alert(`Erro ao fazer login: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,9 +63,10 @@ export default function Login() {
 
         <button
           type="submit"
-          className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-4 px-6 rounded-full transition-colors mt-6"
+          disabled={loading}
+          className={`w-full ${loading ? 'bg-teal-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'} text-white font-medium py-4 px-6 rounded-full transition-colors mt-6`}
         >
-          Log in
+          {loading ? 'Signing in...' : 'Log in'}
         </button>
       </form>
 
